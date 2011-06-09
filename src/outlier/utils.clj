@@ -7,22 +7,26 @@
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
 ; load CSV file
-(defn load-datevalue-csv
-	"Loads a CSV with a date / decimal value structure into an arraymap,
-	convert its text contents to dates and floats and returns it"
-	[filename]
+(defn load-datevalue-from-csv
+	"Loads an arraymap with a date / value structure from a CSV file,
+	convert its text contents to dates and floats and returns it.
+	date-col is the date column name (as symobol)
+	value-col is the value column name (as symobol)"
+	[filename date-col value-col]
 	(let [csvlines (outlier.csv/csv-seq filename true)]
-		(map #(merge %1 %2) (map #(zipmap [:value] [(Float/valueOf (:value %))]) csvlines) 
-		(map #(zipmap [:date] [(. (new java.text.SimpleDateFormat "M/d/y") (parse (:date %)))]) csvlines))))
+		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines) 
+		(map #(zipmap [date-col] [(. (new java.text.SimpleDateFormat "M/d/y") (parse (date-col %)))]) csvlines))))
 
 ; load CSV file with EPOCH date (needed by time series chart in Incanter)
-(defn load-epochvalue-csv
-	"Loads a CSV with an epoch date / decimal value structure into an arraymap,
-	convert its text contents to dates and floats and returns it"
-	[filename]
+(defn load-epochdatevalue-from-csv
+	"Loads an arraymap with an epoch date / value structure from a CSV file,
+	convert its text contents to dates and floats and returns it.
+	date-col is the date column name (as symobol)
+	value-col is the value column name (as symobol)"
+	[filename date-col value-col]
 	(let [csvlines (outlier.csv/csv-seq filename true)]
-		(map #(merge %1 %2) (map #(zipmap [:value] [(Float/valueOf (:value %))]) csvlines) 
-		(map #(zipmap [:date] [(. (. (new java.text.SimpleDateFormat "M/d/y") (parse (:date %))) getTime)]) csvlines))))
+		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines) 
+		(map #(zipmap [date-col] [(. (. (new java.text.SimpleDateFormat "M/d/y") (parse (date-col %))) getTime)]) csvlines))))
 
 ; median definition
 (defn median

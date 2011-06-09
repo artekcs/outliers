@@ -28,6 +28,18 @@
 				answer (if (< 0 s) (<= threshold (/ diff s)) false)]
 		[answer value m s diff]))
 
+(defn- outlier-mad?
+	"Takes a collection of 'size' items around a middle point.
+	Calculates the number of mad from middle point to set's median.
+	If more than threshold, then returns true."
+	[sample threshold]
+	(let [m (outlier.utils/median sample)
+				mad (outlier.utils/median (map #(clojure.contrib.generic.math-functions/abs (- % (outlier.utils/median sample))) sample))
+				value (nth sample (quot (count sample) 2))
+				diff (clojure.contrib.generic.math-functions/abs (- m value))
+				answer (if (< 0 mad) (<= threshold (/ diff mad)) false)]
+		[answer value m mad diff]))
+
 (defn- outliers
 	"Helper function for outliers-median and outliers-mean"
 	[values sample-size threshold method]
@@ -51,6 +63,7 @@
 				(let [[out value m s diff] (cond 
 																			(= "mean" method) (outlier-mean? part threshold)
 																			(= "median" method)	(outlier-median? part threshold)
+																			(= "mad" method)	(outlier-mad? part threshold)
 																			:else (outlier-median? part threshold))]
 					(if (= true out)
 						; You can return records if you want - but much longer runtime
@@ -95,3 +108,23 @@
 	Example:
 	(outliers-mean (range 100) 5  2)"
 	[values sample-size threshold] (outliers values sample-size threshold "mean"))
+
+(defn outliers-mad
+	"Given a collection of sorted values, this function will scan samples of n points around studied point,
+	then calculate number of sample 'mad' (median absolute deviation) from studied point to sample median,
+	and compares this to a given threshold.
+	Computation is done in parallel accross available cores.
+	Returns a collection of map with the following data:
+	- idx: index of outlier in original set of values
+	- comp: median of the sample set around outlier
+	- mad: median absolute deviation from the median for the sample set around outlier
+	- diff: difference between median and outlier
+	Of course, we lose a half sample left and right of the received collection.
+	Original collection items order won't be changed - the caller must sort it prior to calling this function if necessary.
+	Parameters:
+	- collection of values
+	- sample size (odd)
+	- threshold: number of max stddev deviation from point to sample median
+	Example:
+	(outliers-mad (range 100) 5  2)"
+	[values sample-size threshold] (outliers values sample-size threshold "mad"))

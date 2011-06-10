@@ -40,6 +40,23 @@
 				answer (if (< 0 mad) (<= threshold (/ diff mad)) false)]
 		[answer value m mad diff]))
 
+(defn- outlier-iqr?
+	"Takes a collection of 'size' items around a middle point.
+	Determines whether the middle point is under the lowerfence or above the upperfence of the set.
+	Lowerfence = Q1 - (threshold x iqr).
+	Upperfence = Q3 + (threshold x iqr).
+	A common value for thresholds is 1.5"
+	([sample] (outlier-iqr? sample 1.5))
+	([sample threshold]
+	(let [iqr (outlier.utils/iqr sample)
+				q1 (outlier.utils/q1 sample)
+				q3 (outlier.utils/q3 sample)
+				lf (- q1 (* threshold iqr))
+				uf (+ q3 (* threshold iqr))
+				value (nth sample (quot (count sample) 2))]
+				(if (> lf value) [true value lf 0 (clojure.contrib.generic.math-functions/abs (- lf value))]
+					(if (< uf value) [true value uf 0 (clojure.contrib.generic.math-functions/abs (- uf value))] [false value 0 0 0]))))) 
+
 (defn- outliers
 	"Helper function for outliers-median and outliers-mean"
 	[values sample-size threshold method]
@@ -64,11 +81,12 @@
 																			(= "mean" method) (outlier-mean? part threshold)
 																			(= "median" method)	(outlier-median? part threshold)
 																			(= "mad" method)	(outlier-mad? part threshold)
+																			(= "iqr" method)	(outlier-iqr? part threshold)
 																			:else (outlier-median? part threshold))]
 					(if (= true out)
 						; You can return records if you want - but much longer runtime
 						;(Outlier. (+ idx (quot (count part) 2)) value m s diff)
-						(zipmap [:idx :value :comp :stddev :diff] (cons (+ idx (quot (count part) 2)) [value m s diff]))
+						(zipmap [:idx :value :comp :factor :diff] (cons (+ idx (quot (count part) 2)) [value m s diff]))
 						))) (iterate inc 0) sets))))
 
 (defn outliers-median
@@ -78,7 +96,7 @@
 	Returns a collection of map with the following data:
 	- idx: index of outlier in original set of values
 	- comp: median of the sample set around outlier
-	- stddev: std deviation for the sample set around outlier
+	- factor: std deviation for the sample set around outlier
 	- diff: difference between median and outlier
 	Of course, we lose a half sample left and right of the received collection.
 	Original collection items order won't be changed - the caller must sort it prior to calling this function if necessary.
@@ -97,7 +115,7 @@
 	Returns a collection of map with the following data:
 	- idx: index of outlier in original set of values
 	- comp: mean of the sample set around outlier
-	- stddev: std deviation for the sample set around outlier
+	- factor: std deviation for the sample set around outlier
 	- diff: difference between mean and outlier
 	Of course, we lose a half sample left and right of the received collection.
 	Original collection items order won't be changed - the caller must sort it prior to calling this function if necessary.
@@ -117,7 +135,7 @@
 	Returns a collection of map with the following data:
 	- idx: index of outlier in original set of values
 	- comp: median of the sample set around outlier
-	- mad: median absolute deviation from the median for the sample set around outlier
+	- factor: median absolute deviation from the median for the sample set around outlier
 	- diff: difference between median and outlier
 	Of course, we lose a half sample left and right of the received collection.
 	Original collection items order won't be changed - the caller must sort it prior to calling this function if necessary.
@@ -128,3 +146,23 @@
 	Example:
 	(outliers-mad (range 100) 5  2)"
 	[values sample-size threshold] (outliers values sample-size threshold "mad"))
+
+(defn outliers-iqr
+	"Given a collection of sorted values, this function will scan samples of n points around studied point,
+	then calculate whether this point is below the lowerfence (q1 - (threshold * iqr),
+	or above the upperfence (q3 + (threshold * iqr)). If any of these is true, then the point is considered an outlier.
+	Computation is done in parallel accross available cores.
+	Returns a collection of map with the following data:
+	- idx: index of outlier in original set of values
+	- comp: lowerfence or upperfence (whichever is broken by studied point)
+	- factor: not used - 0
+	- diff: not used - 0
+	Of course, we lose a half sample left and right of the received collection.
+	Original collection items order won't be changed - the caller must sort it prior to calling this function if necessary.
+	Parameters:
+	- collection of values
+	- sample size (odd)
+	- threshold: number of max stddev deviation from point to sample median
+	Example:
+	(outliers-iqr (range 100) 5  1.5)"
+	[values sample-size threshold] (outliers values sample-size threshold "iqr"))

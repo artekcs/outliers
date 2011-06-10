@@ -30,7 +30,7 @@
 
 ; median definition
 (defn median
-	"Returns the median value of a vector of numerical values"
+	"Returns the median value (or second quartile, or Q2) of a collection of numerical values"
 	[values]
 	; sanity checks
 	(if (not (coll? values))
@@ -41,10 +41,46 @@
 			(nth sorted-values (quot (count sorted-values) 2))
 			; we take the mean between the 2 middle numbers
 			(/ (+ (nth sorted-values (- (quot (count sorted-values) 2) 1)) (nth sorted-values (quot (count sorted-values) 2))) 2))))
-	
+
+; q1 definition
+(defn q1
+	"Returns the first quartile (Q1) of a collection of numerical values.
+	The method used here doesn't include the set median in the two halves."
+	[values]
+	; sanity checks
+	(if (not (coll? values))
+		(throw (Exception. "Invalid parameter: 'values' must be a collection. Please check")))
+		; sort
+		(let [sorted-values (sort values)]
+			; actually, we don't care if the set has odd or even members, we always exclude the median.
+			(median (take (quot (count sorted-values) 2) sorted-values))))
+
+; q3 definition
+(defn q3
+	"Returns the third quartile (Q3) of a collection of numerical values.
+	The method used here doesn't include the set median in the two halves."
+	[values]
+	; sanity checks
+	(if (not (coll? values))
+		(throw (Exception. "Invalid parameter: 'values' must be a collection. Please check")))
+		; sort
+		(let [sorted-values (sort values)]
+			; actually, we don't care if the set has odd or even members, we always exclude the median.
+			(median (take-last (quot (count sorted-values) 2) sorted-values))))
+
+; iqr definition
+(defn iqr
+	"Returns the Interquartile Range (IQR) of a collection of numerical values.
+	IQR is the difference between first quartile (Q1) and the third one (Q3)."
+	[values]
+	; sanity checks
+	(if (not (coll? values))
+		(throw (Exception. "Invalid parameter: 'values' must be a collection. Please check")))
+	(- (q3 values) (q1 values)))
+
 ; mean definition
 (defn mean
-	"Returns the mean value of a vector of numerical values"
+	"Returns the mean value of a collection of numerical values"
 	[values]
 	; sanity checks
 	(if (not (coll? values))

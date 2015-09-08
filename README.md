@@ -24,7 +24,7 @@ Once downloaded, run a lein deps then a lein repl.
 
 ### 2015.09.08
 
-Updated to Leiningen 2.0, Clojure 1.7, Incanter 1.5.6
+Updated to Leiningen 2.5.2, Clojure 1.7, Incanter 1.5.6
 
 ## License
 

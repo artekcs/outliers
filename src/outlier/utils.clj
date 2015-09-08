@@ -1,7 +1,6 @@
 (ns outlier.utils
 	(:require outlier.csv)
-	(:require clojure.contrib.generic.math-functions)
-	(:require clojure.contrib.profile))
+	(:require clojure.algo.generic.math-functions))
 
 ; debug macro
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
@@ -13,9 +12,12 @@
 	date-col is the date column name (as symobol)
 	value-col is the value column name (as symobol)"
 	[filename date-col value-col]
-	(let [csvlines (outlier.csv/csv-seq filename true)]
-		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines) 
-		(map #(zipmap [date-col] [(. (new java.text.SimpleDateFormat "M/d/y") (parse (date-col %)))]) csvlines))))
+	(let [csvlines (outlier.csv/csv-seq filename true)
+			 	fmt (new java.text.SimpleDateFormat "yyyy-MM-dd")]
+		(. fmt (setTimeZone(java.util.TimeZone/getTimeZone "UTC" )))
+		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines)
+			(map #(zipmap [date-col] [(. fmt (parse (date-col %)))]) csvlines))))
+;		(map #(zipmap [date-col] [(. (new java.text.SimpleDateFormat "M/d/y") (parse (date-col %)))]) csvlines))))
 
 ; load CSV file with EPOCH date (needed by time series chart in Incanter)
 (defn load-epochdatevalue-from-csv
@@ -24,9 +26,11 @@
 	date-col is the date column name (as symobol)
 	value-col is the value column name (as symobol)"
 	[filename date-col value-col]
-	(let [csvlines (outlier.csv/csv-seq filename true)]
-		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines) 
-		(map #(zipmap [date-col] [(. (. (new java.text.SimpleDateFormat "M/d/y") (parse (date-col %))) getTime)]) csvlines))))
+	(let [csvlines (outlier.csv/csv-seq filename true)
+				fmt (new java.text.SimpleDateFormat "yyyy-MM-dd")]
+		(. fmt (setTimeZone(java.util.TimeZone/getTimeZone "UTC" )))
+		(map #(merge %1 %2) (map #(zipmap [value-col] [(Float/valueOf (value-col %))]) csvlines)
+			(map #(zipmap [date-col] [(. (. fmt (parse (date-col %))) getTime)]) csvlines))))
 
 ; median definition
 (defn median
@@ -99,7 +103,7 @@
 		(throw (Exception. "Invalid parameter: 'values' must be a collection. Please check")))
 	(let [m (mean values)
 				p (if entire? (count values) (- (count values) 1))]
-		(clojure.contrib.generic.math-functions/sqrt (/ (apply + (map #(clojure.contrib.generic.math-functions/sqr (- % m)) values)) p)))))
+		(clojure.algo.generic.math-functions/sqrt (/ (apply + (map #(clojure.algo.generic.math-functions/sqr (- % m)) values)) p)))))
 
 ; stddev-median definition
 (defn stddev-median
@@ -110,7 +114,7 @@
 	([values entire?]
 	(let [m (median values)
 				p (if entire? (count values) (- (count values) 1))]
-		(clojure.contrib.generic.math-functions/sqrt (/ (apply + (map #(clojure.contrib.generic.math-functions/sqr (- % m)) values)) p)))))
+		(clojure.algo.generic.math-functions/sqrt (/ (apply + (map #(clojure.algo.generic.math-functions/sqr (- % m)) values)) p)))))
 
 ; mode definition
 (defn mode

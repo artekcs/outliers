@@ -1,6 +1,6 @@
 (ns outlier.core
 	(:require outlier.utils)
-	(:require clojure.contrib.generic.math-functions))
+	(:require clojure.algo.generic.math-functions))
 
 (defrecord Outlier [idx value comparer stddev diff])
 
@@ -12,7 +12,7 @@
 	(let [m (outlier.utils/median sample)
 				s (outlier.utils/stddev-median sample)
 				value (nth sample (quot (count sample) 2))
-				diff (clojure.contrib.generic.math-functions/abs (- m value))
+				diff (clojure.algo.generic.math-functions/abs (- m value))
 				answer (if (< 0 s) (<= threshold (/ diff s)) false)]
 		[answer value m s diff]))
 
@@ -24,7 +24,7 @@
 	(let [m (outlier.utils/mean sample)
 				s (outlier.utils/stddev sample)
 				value (nth sample (quot (count sample) 2))
-				diff (clojure.contrib.generic.math-functions/abs (- m value))
+				diff (clojure.algo.generic.math-functions/abs (- m value))
 				answer (if (< 0 s) (<= threshold (/ diff s)) false)]
 		[answer value m s diff]))
 
@@ -34,9 +34,9 @@
 	If more than threshold, then returns true."
 	[sample threshold]
 	(let [m (outlier.utils/median sample)
-				mad (outlier.utils/median (map #(clojure.contrib.generic.math-functions/abs (- % (outlier.utils/median sample))) sample))
+				mad (outlier.utils/median (map #(clojure.algo.generic.math-functions/abs (- % (outlier.utils/median sample))) sample))
 				value (nth sample (quot (count sample) 2))
-				diff (clojure.contrib.generic.math-functions/abs (- m value))
+				diff (clojure.algo.generic.math-functions/abs (- m value))
 				answer (if (< 0 mad) (<= threshold (/ diff mad)) false)]
 		[answer value m mad diff]))
 
@@ -54,8 +54,8 @@
 				lf (- q1 (* threshold iqr))
 				uf (+ q3 (* threshold iqr))
 				value (nth sample (quot (count sample) 2))]
-				(if (> lf value) [true value lf 0 (clojure.contrib.generic.math-functions/abs (- lf value))]
-					(if (< uf value) [true value uf 0 (clojure.contrib.generic.math-functions/abs (- uf value))] [false value 0 0 0]))))) 
+				(if (> lf value) [true value lf 0 (clojure.algo.generic.math-functions/abs (- lf value))]
+					(if (< uf value) [true value uf 0 (clojure.algo.generic.math-functions/abs (- uf value))] [false value 0 0 0])))))
 
 (defn- outliers
 	"Helper function for outliers-median and outliers-mean"
@@ -76,8 +76,8 @@
 	; sets: all the sub-collections we need to analyze (sample-size around each point)
 	(let [sets (partition sample-size 1 values)]
 		(filter #(not (nil? %))
-			(pmap (fn [idx part] 
-				(let [[out value m s diff] (cond 
+			(pmap (fn [idx part]
+				(let [[out value m s diff] (cond
 																			(= "mean" method) (outlier-mean? part threshold)
 																			(= "median" method)	(outlier-median? part threshold)
 																			(= "mad" method)	(outlier-mad? part threshold)

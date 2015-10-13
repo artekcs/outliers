@@ -94,8 +94,8 @@
 ; stddev definition
 (defn stddev
 	"Returns the regular, mean-based stddev of a vector of numerical values.
-	If you pass true or norhing for the second argument, result is a entire population-based stddev.
-	If you pass false for the second argument, result is a sample population-based stddev."
+	If you pass true or nothing for the second argument, result is a entire population-based stddev.
+	If you pass false for the second argument, result is a sample population-based stddev (Bessel's Correction)."
 	([values] (stddev values true))
 	([values entire?]
 	; sanity checks
@@ -108,8 +108,8 @@
 ; stddev-median definition
 (defn stddev-median
 	"Returns the median-based stddev of a vector of numerical values
-	If you pass true or norhing for the second argument, result is a entire population-based stddev.
-	If you pass false for the second argument, result is a sample population-based stddev."
+	If you pass true or nothing for the second argument, result is a entire population-based stddev.
+	If you pass false for the second argument, result is a sample population-based stddev (Bessel's Correction)."
 	([values] (stddev-median values true))
 	([values entire?]
 	(let [m (median values)

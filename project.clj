@@ -1,4 +1,4 @@
-(defproject outlier "2.0.0-SNAPSHOT"
+(defproject outlier "2.0.1-SNAPSHOT"
   :description "This project is an experiment at building data-oriented functions in Clojure aimed at detecting outliers in data sets"
   :license {:name "Eclipse Public License - v 1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"

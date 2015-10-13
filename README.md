@@ -22,9 +22,13 @@ Once downloaded, run a lein deps then a lein repl.
 
 ## Updates
 
+### 2015.10.13
+
+Small changes in the description of stddev and stddev-median (utils.clj) related to [Bessel's Correction](https://en.wikipedia.org/wiki/Bessel%27s_correction) usage.
+
 ### 2015.09.08
 
-Updated to Leiningen 2.5.2, Clojure 1.7, Incanter 1.5.6
+Updated to [Leiningen](https://github.com/technomancy/leiningen) 2.5.2, [Clojure](http://clojure.org) 1.7, [Incanter](http://incanter.org) 1.5.6
 
 ## License
 
